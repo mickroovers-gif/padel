@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Padel Toernooi - Score Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .controls {
+            padding: 20px;
+            background: #ecf0f1;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .controls button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .controls button:hover {
+            background: #2980b9;
+        }
+        
+        .controls button.active {
+            background: #e74c3c;
+        }
+        
+        .rounds-container {
+            padding: 20px;
+        }
+        
+        .round {
+            margin-bottom: 30px;
+            border: 2px solid #bdc3c7;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .round-header {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .courts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        
+        .court {
+            border: 2px solid #3498db;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+        
+        .court.singles-court {
+            border: 2px solid #ff6b6b;
+        }
+        
+        .court-header {
+            background: #3498db;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .court.singles-court .court-header {
+            background: #ff6b6b;
+        }
+        
+        .match {
+            padding: 15px;
+        }
+        
+        .teams {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .team {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .team-names {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .player-name {
+            margin: 2px 0;
+            padding: 4px 8px;
+            background: #e8f4f8;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .player-name.winner {
+            background: #d5f4e6;
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .player-name.pending {
+            background: #fef9e7;
+            color: #f39c12;
+            font-style: italic;
+        }
+        
+        .vs {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #e74c3c;
+            margin: 0 15px;
+        }
+        
+        .score-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .score-input {
+            width: 60px;
+            height: 40px;
+            border: 2px solid #bdc3c7;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .score-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .score-input:disabled {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+        
+        .match-status {
+            text-align: center;
+            margin-top: 10px;
+            padding: 5px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .match-status.completed {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+        
+        .match-status.in-progress {
+            background: #fef9e7;
+            color: #f39c12;
+        }
+        
+        .match-status.waiting {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .standings {
+            margin-top: 30px;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+        }
+        
+        .standings h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .standings-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .standings-table th,
+        .standings-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #bdc3c7;
+        }
+        
+        .standings-table th {
+            background: #34495e;
+            color: white;
+        }
+        
+        .export-btn {
+            background: #27ae60 !important;
+            margin-top: 20px;
+        }
+        
+        .export-btn:hover {
+            background: #229954 !important;
+        }
+
+        .match-singles {
+            background: #fff5f5;
+            border-left: 4px solid #ff6b6b;
+        }
+
+        .singles-indicator {
+            font-size: 12px;
+            color: #ff6b6b;
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎾 Padel Toernooi</h1>
+            <p>Score Tracker & Uitslagen</p>
+            <p style="font-size: 14px; opacity: 0.8; margin-top: 5px;">Tijd: 10:00 - 12:00 | Baan 1&2: Doubles (25 min) | Baan 3: Singles (10 min)</p>
+        </div>
+        
+        <div class="controls">
+            <button onclick="toggleStandings()" id="standingsBtn">Toon Klassement</button>
+            <button onclick="exportResults()" class="export-btn">Export Resultaten</button>
+            <button onclick="resetScores()">Reset Scores</button>
+        </div>
+        
+        <div class="rounds-container" id="roundsContainer">
+            <!-- Rounds worden hier dynamisch toegevoegd -->
+        </div>
+        
+        <div class="standings" id="standings" style="display: none;">
+            <h2>Klassement</h2>
+            <table class="standings-table" id="standingsTable">
+                <thead>
+                    <tr>
+                        <th>Positie</th>
+                        <th>Speler</th>
+                        <th>Gespeeld</th>
+                        <th>Gewonnen</th>
+                        <th>Verloren</th>
+                        <th>Sets Voor</th>
+                        <th>Sets Tegen</th>
+                        <th>Punten</th>
+                    </tr>
+                </thead>
+                <tbody id="standingsBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Voorgedefinieerd toernooi schema gebaseerd op de afbeelding
+        let tournament = {
+            rounds: [
+                {
+                    id: 'round-1',
+                    number: 1,
+                    courts: [
+                        {
+                            id: 'court-1-1',
+                            name: 'Baan 1',
+                            match: {
+                                team1: { player1: 'Patricia', player2: 'Theun', score: '' },
+                                team2: { player1: 'Laura', player2: 'Bas', score: '' },
+                                completed: false
+                            }
+                        },
+                        {
+                            id: 'court-1-2',
+                            name: 'Baan 2',
+                            match: {
+                                team1: { player1: 'Elmar', player2: 'Mark', score: '' },
+                                team2: { player1: 'Base', player2: 'Koen', score: '' },
+                                completed: false
+                            }
+                        },
+                        {
+                            id: 'court-1-3-1',
+                            name: 'Baan 3 - Match 1',
+                            match: {
+                                team1: { player1: 'Cyril', player2: '', score: '' },
+                                team2: { player1: 'Leo', player2: '', score: '' },
+                                completed: false,
+                                isSingles: true
+                            }
+                        },
+                        {
+                            id: 'court-1-3-2',
+                            name: 'Baan 3 - Match 2',
+                            match: {
+                                team1: { player1: 'Martijn', player2: '', score: '' },
+                                team2: { player1: 'Erwin', player2: '', score: '' },
+                                completed: false,
+                                isSingles: true
+                            }
+                        },
+                        {
+                            id: 'court-1-3-3',
+                            name: 'Baan 3 - Match 3',
+                            match: {
+                                team1: { player1: 'Mick', player2: '', score: '' },
+                                team2: { player1: '', player2: '', score: '' }, // Winnaar van Match 1
+                                completed: false,
+                                isSingles: true,
+                                dependsOn: 'court-1-3-1'
+                            }
+                        }
+                    ]
+                },
+                {
+                    id: 'round-2',
+                    number: 2,
+                    courts: [
+                        {
+                            id: 'court-2-1',
+                            name: 'Baan 1',
+                            match: {
+                                team1: { player1: 'Laura', player2: 'Elmar', score: '' },
+                                team2: { player1: 'Patricia', player2: 'Base', score: '' },
+                                completed: false
+                            }
+                        },
+                        {
+                            id: 'court-2-2',
+                            name: 'Baan 2',
+                            match: {
+                                team1: { player1: 'Cyril', player2: 'Mick', score: '' },
+                                team2: { player1: 'Leo', player2: 'Martijn', score: '' },
+                                completed: false
+                            }
+                        },
+                        {
+                            id: 'court-2-3-1',
+                            name: 'Baan 3 - Match 1',
+                            match: {
+                                team1: { player1: 'Theun', player2: '', score: '' },
+                                team2: { player1: 'Bas', player2: '', score: '' },
+                                completed: false,
+                                isSingles: true
+                            }
+                        },
+                        {
+                            id: 'court-2-3-2',
+                            name: 'Baan 3 - Match 2',
+                            match: {
+                                team1: { player1: 'Mark', player2: '', score: '' },
+                                team2: { player1: 'Koen', player2: '', score: '' },
+                                completed: false,
+                                isSingles: true
+                            }
+                        },
+                        {
+                            id: 'court-2-3-3',
+                            name: 'Baan 3 - Match 3',
+                            match: {
+                                team1: { player1: 'Erwin', player2: '', score: '' },
+                                team2: { player1: '', player2: '', score: '' }, // Winnaar van Match 1
+                                completed: false,
+                                isSingles: true,
+                                dependsOn: 'court-2-3-1'
+                            }
+                        }
+                    ]
+                },
+                {
+                    id: 'round-3',
+                    number: 3,
+                    courts: [
+                        {
+                            id: 'court-3-1',
+                            name: 'Baan 1',
+                            match: {
+                                team1: { player1: 'Erwin', player2: 'Mark', score: '' },
+                                team2: { player1: 'Koen', player2: 'Leo', score: '' },
+                                completed: false
+                            }
+                        },
+                        {
+                            id: 'court-3-2',
+                            name: 'Baan 2',
+                            match: {
+                                team1: { player1: 'Theun', player2: 'Mick', score: '' },
+                                team2: { player1: 'Bas', player2: 'Martijn', score: '' },
+                                completed: false
+                            }
+                        },
+                        {
+                            id: 'court-3-3-1',
+                            name: 'Baan 3 - Match 1',
+                            match: {
+                                team1: { player1: 'Elmar', player2: '', score: '' },
+                                team2: { player1: 'Base', player2: '', score: '' },
+                                completed: false,
+                                isSingles: true
+                            }
+                        },
+                        {
+                            id: 'court-3-3-2',
+                            name: 'Baan 3 - Match 2',
+                            match: {
+                                team1: { player1: 'Laura', player2: '', score: '' },
+                                team2: { player1: 'Patricia', player2: '', score: '' },
+                                completed: false,
+                                isSingles: true
+                            }
+                        },
+                        {
+                            id: 'court-3-3-3',
+                            name: 'Baan 3 - Match 3',
+                            match: {
+                                team1: { player1: 'Cyril', player2: '', score: '' },
+                                team2: { player1: '', player2: '', score: '' }, // Winnaar van Match 1
+                                completed: false,
+                                isSingles: true,
+                                dependsOn: 'court-3-3-1'
+                            }
+                        }
+                    ]
+                },
+                {
+                    id: 'round-4',
+                    number: 4,
+                    courts: [
+                        {
+                            id: 'court-4-1',
+                            name: 'Baan 1',
+                            match: {
+                                team1: { player1: 'Patricia', player2: 'Mick', score: '' },
+                                team2: { player1: 'Laura', player2: 'Cyril', score: '' },
+                                completed: false
+                            }
+                        },
+                        {
+                            id: 'court-4-2',
+                            name: 'Baan 2',
+                            match: {
+                                team1: { player1: 'Elmar', player2: 'Erwin', score: '' },
+                                team2: { player1: 'Koen', player2: 'Base', score: '' },
+                                completed: false
+                            }
+                        },
+                        {
+                            id: 'court-4-3-1',
+                            name: 'Baan 3 - Match 1',
+                            match: {
+                                team1: { player1: 'Leo', player2: '', score: '' },
+                                team2: { player1: 'Theun', player2: '', score: '' },
+                                completed: false,
+                                isSingles: true
+                            }
+                        },
+                        {
+                            id: 'court-4-3-2',
+                            name: 'Baan 3 - Match 2',
+                            match: {
+                                team1: { player1: 'Martijn', player2: '', score: '' },
+                                team2: { player1: 'Mark', player2: '', score: '' },
+                                completed: false,
+                                isSingles: true
+                            }
+                        },
+                        {
+                            id: 'court-4-3-3',
+                            name: 'Baan 3 - Match 3',
+                            match: {
+                                team1: { player1: 'Bas', player2: '', score: '' },
+                                team2: { player1: '', player2: '', score: '' }, // Winnaar van Match 1
+                                completed: false,
+                                isSingles: true,
+                                dependsOn: 'court-4-3-1'
+                            }
+                        }
+                    ]
+                }
+            ],
+            players: new Set(['Patricia', 'Theun', 'Laura', 'Bas', 'Elmar', 'Mark', 'Base', 'Koen', 'Cyril', 'Leo', 'Martijn', 'Erwin', 'Mick'])
+        };
+
+        function getWinner(courtId) {
+            const court = findCourt(courtId);
+            if (!court || !court.match.completed || !court.match.team1.score || !court.match.team2.score) {
+                return null;
+            }
+            
+            const score1 = parseInt(court.match.team1.score) || 0;
+            const score2 = parseInt(court.match.team2.score) || 0;
+            
+            if (score1 > score2) {
+                return court.match.team1.player1;
+            } else if (score2 > score1) {
+                return court.match.team2.player1;
+            }
+            return null; // Gelijkspel
+        }
+
+        function updateDependentMatches() {
+            tournament.rounds.forEach(round => {
+                round.courts.forEach(court => {
+                    if (court.match.dependsOn) {
+                        const winner = getWinner(court.match.dependsOn);
+                        if (winner) {
+                            court.match.team2.player1 = winner;
+                        } else {
+                            court.match.team2.player1 = '';
+                        }
+                    }
+                });
+            });
+        }
+
+        function renderTournament() {
+            updateDependentMatches();
+            
+            const container = document.getElementById('roundsContainer');
+            container.innerHTML = '';
+            
+            tournament.rounds.forEach(round => {
+                const roundDiv = document.createElement('div');
+                roundDiv.className = 'round';
+                roundDiv.innerHTML = `
+                    <div class="round-header">
+                        Ronde ${round.number}
+                    </div>
+                    <div class="courts">
+                        ${round.courts.map(court => {
+                            const isSingles = court.match.isSingles;
+                            const isDependent = court.match.dependsOn;
+                            const canPlay = !isDependent || court.match.team2.player1;
+                            
+                            return `
+                                <div class="court ${isSingles ? 'singles-court' : ''}">
+                                    <div class="court-header">
+                                        ${court.name}
+                                        ${isSingles ? '<br><span style="font-size: 12px;">(Singles - 10 min)</span>' : '<br><span style="font-size: 12px;">(Doubles - 25 min)</span>'}
+                                    </div>
+                                    <div class="match">
+                                        ${isSingles ? '<div class="singles-indicator">🏆 SINGLES MATCH</div>' : ''}
+                                        <div class="teams">
+                                            <div class="team">
+                                                <div class="team-names">
+                                                    ${court.match.team1.player1 ? `<div class="player-name">${court.match.team1.player1}</div>` : ''}
+                                                    ${court.match.team1.player2 ? `<div class="player-name">${court.match.team1.player2}</div>` : ''}
+                                                </div>
+                                            </div>
+                                            <div class="vs">VS</div>
+                                            <div class="team">
+                                                <div class="team-names">
+                                                    ${court.match.team2.player1 ? 
+                                                        `<div class="player-name ${isDependent ? 'winner' : ''}">${court.match.team2.player1}</div>` : 
+                                                        (isDependent ? '<div class="player-name pending">Winnaar Match 1</div>' : '')
+                                                    }
+                                                    ${court.match.team2.player2 ? `<div class="player-name">${court.match.team2.player2}</div>` : ''}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="score-inputs">
+                                            <input type="text" class="score-input" placeholder="0" value="${court.match.team1.score}" 
+                                                   ${!canPlay ? 'disabled' : ''} 
+                                                   onchange="updateScore('${court.id}', 'team1', this.value)">
+                                            <span style="font-size: 20px; font-weight: bold; align-self: center;">-</span>
+                                            <input type="text" class="score-input" placeholder="0" value="${court.match.team2.score}" 
+                                                   ${!canPlay ? 'disabled' : ''}
+                                                   onchange="updateScore('${court.id}', 'team2', this.value)">
+                                        </div>
+                                        <div class="match-status ${court.match.completed ? 'completed' : (canPlay ? 'in-progress' : 'waiting')}">
+                                            ${getMatchStatus(court.match, canPlay)}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                container.appendChild(roundDiv);
+            });
+        }
+
+        function updateScore(courtId, team, value) {
+            const court = findCourt(courtId);
+            if (court) {
+                court.match[team].score = value;
+                court.match.completed = court.match.team1.score !== '' && court.match.team2.score !== '';
+                renderTournament();
+                updateStandings();
+                
+                // Auto-save scores to localStorage
+                localStorage.setItem('padelTournament', JSON.stringify(tournament));
+            }
+        }
+
+        function findCourt(courtId) {
+            for (let round of tournament.rounds) {
+                const court = round.courts.find(c => c.id === courtId);
+                if (court) return court;
+            }
+            return null;
+        }
+
+        function getMatchStatus(match, canPlay) {
+            if (!canPlay) {
+                return 'Wacht op winnaar Match 1...';
+            }
+            
+            if (match.completed && match.team1.score !== '' && match.team2.score !== '') {
+                const score1 = parseInt(match.team1.score) || 0;
+                const score2 = parseInt(match.team2.score) || 0;
+                if (score1 > score2) return match.isSingles ? `${match.team1.player1} Wint!` : 'Team 1 Wint!';
+                if (score2 > score1) return match.isSingles ? `${match.team2.player1} Wint!` : 'Team 2 Wint!';
+                return 'Gelijkspel!';
+            }
+            return 'Klaar om te spelen...';
+        }
+
+        function toggleStandings() {
+            const standings = document.getElementById('standings');
+            const btn = document.getElementById('standingsBtn');
+            if (standings.style.display === 'none') {
+                standings.style.display = 'block';
+                btn.textContent = 'Verberg Klassement';
+                btn.classList.add('active');
+                updateStandings();
+            } else {
+                standings.style.display = 'none';
+                btn.textContent = 'Toon Klassement';
+                btn.classList.remove('active');
+            }
+        }
+
+        function updateStandings() {
+            const playerStats = {};
+            
+            // Initialiseer statistieken voor alle spelers
+            tournament.players.forEach(player => {
+                if (player.trim()) {
+                    playerStats[player] = {
+                        played: 0,
+                        won: 0,
+                        lost: 0,
+                        setsFor: 0,
+                        setsAgainst: 0,
+                        points: 0
+                    };
+                }
+            });
+
+            // Bereken statistieken uit alle wedstrijden
+            tournament.rounds.forEach(round => {
+                round.courts.forEach(court => {
+                    const match = court.match;
+                    if (match.completed && match.team1.score !== '' && match.team2.score !== '') {
+                        const score1 = parseInt(match.team1.score) || 0;
+                        const score2 = parseInt(match.team2.score) || 0;
+                        
+                        const team1Players = [match.team1.player1, match.team1.player2].filter(p => p && p.trim());
+                        const team2Players = [match.team2.player1, match.team2.player2].filter(p => p && p.trim());
+                        
+                        // Update statistieken voor team 1 spelers
+                        team1Players.forEach(player => {
+                            if (playerStats[player]) {
+                                playerStats[player].played++;
+                                playerStats[player].setsFor += score1;
+                                playerStats[player].setsAgainst += score2;
+                                if (score1 > score2) {
+                                    playerStats[player].won++;
+                                    playerStats[player].points += 2;
+                                } else if (score1 < score2) {
+                                    playerStats[player].lost++;
+                                } else {
+                                    playerStats[player].points += 1;
+                                }
+                            }
+                        });
+                        
+                        // Update statistieken voor team 2 spelers
+                        team2Players.forEach(player => {
+                            if (playerStats[player]) {
+                                playerStats[player].played++;
+                                playerStats[player].setsFor += score2;
+                                playerStats[player].setsAgainst += score1;
+                                if (score2 > score1) {
+                                    playerStats[player].won++;
+                                    playerStats[player].points += 2;
+                                } else if (score2 < score1) {
+                                    playerStats[player].lost++;
+                                } else {
+                                    playerStats[player].points += 1;
+                                }
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Sorteer spelers op punten
+            const sortedPlayers = Object.entries(playerStats)
+                .sort((a, b) => {
+                    if (b[1].points !== a[1].points) return b[1].points - a[1].points;
+                    return (b[1].setsFor - b[1].setsAgainst) - (a[1].setsFor - a[1].setsAgainst);
+                });
+
+            // Update de tabel
+            const tbody = document.getElementById('standingsBody');
+            tbody.innerHTML = sortedPlayers.map(([player, stats], index) => `
+                <tr style="${index < 3 ? 'background-color: #f0f8e8;' : ''}">
+                    <td><strong>${index + 1}</strong></td>
+                    <td><strong>${player}</strong></td>
+                    <td>${stats.played}</td>
+                    <td>${stats.won}</td>
+                    <td>${stats.lost}</td>
+                    <td>${stats.setsFor}</td>
+                    <td>${stats.setsAgainst}</td>
+                    <td><strong>${stats.points}</strong></td>
+                </tr>
+            `).join('');
+        }
+
+        function exportResults() {
+            const results = {
+                tournament: tournament,
+                timestamp: new Date().toISOString(),
+                playerStats: {}
+            };
+            
+            const dataStr = JSON.stringify(results, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `padel-toernooi-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            
+            URL.revokeObjectURL(url);
+            alert('Resultaten geëxporteerd!');
+        }
+
+        function resetScores() {
+            if (confirm('Weet je zeker dat je alle scores wilt resetten? Spelers blijven behouden.')) {
+                tournament.rounds.forEach(round => {
+                    round.courts.forEach(court => {
+                        court.match.team1.score = '';
+                        court.match.team2.score = '';
+                        court.match.completed = false;
+                    });
+                });
+                renderTournament();
+                localStorage.removeItem('padelTournament');
+            }
+        }
+
+        // Load saved tournament from localStorage
+        function loadSavedTournament() {
+            const saved = localStorage.getItem('padelTournament');
+            if (saved) {
+                try {
+                    const savedTournament = JSON.parse(saved);
+                    // Merge saved scores with current structure
+                    tournament.rounds.forEach((round, rIndex) => {
+                        round.courts.forEach((court, cIndex) => {
+                            if (savedTournament.rounds[rIndex] && savedTournament.rounds[rIndex].courts[cIndex]) {
+                                const savedCourt = savedTournament.rounds[rIndex].courts[cIndex];
+                                court.match.team1.score = savedCourt.match.team1.score;
+                                court.match.team2.score = savedCourt.match.team2.score;
+                                court.match.completed = savedCourt.match.completed;
+                            }
+                        });
+                    });
+                } catch (e) {
+                    console.error('Error loading saved tournament:', e);
+                }
+            }
+        }
+
+        // Initialiseer de app
+        loadSavedTournament();
+        renderTournament();
+    </script>
+</body>
+</html>
